@@ -12,6 +12,7 @@ app = FastAPI()
 
 @app.on_event("startup")
 async def startup_event():
+    """Handles application startup events."""
     pass
     # async with engine.begin() as conn:
     #     await conn.run_sync(Base.metadata.create_all)
@@ -28,4 +29,5 @@ app.include_router(invoice.router)
 
 @app.get("/")
 async def root():
+    """Root endpoint for the API."""
     return {"message": "Mattilda API en local!"}

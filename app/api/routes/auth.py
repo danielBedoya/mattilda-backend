@@ -11,6 +11,7 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 
 @router.post("/register")
 async def register(user: UserCreate, db: AsyncSession = Depends(get_db)):
+    """Registers a new user."""
     result = await db.execute(select(User).filter(User.username == user.username))
     if result.scalar():
         raise HTTPException(status_code=400, detail="Username already registered")
@@ -28,6 +29,7 @@ async def register(user: UserCreate, db: AsyncSession = Depends(get_db)):
 
 @router.post("/login")
 async def login(user: UserLogin, db: AsyncSession = Depends(get_db)):
+    """Authenticates a user and returns an access token."""
     result = await db.execute(select(User).filter(User.username == user.username))
     db_user = result.scalar_one_or_none()
     if not db_user or not verify_password(user.password, db_user.hashed_password):

@@ -19,6 +19,7 @@ async def create_student(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    """Create a new student."""
     return await crud_student.create_student(db, student)
 
 
@@ -29,6 +30,7 @@ async def read_students(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    """Retrieve a list of students."""
     return await crud_student.get_students(db, skip, limit)
 
 
@@ -38,6 +40,7 @@ async def read_student(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    """Retrieve a single student by ID."""
     student = await crud_student.get_student(db, student_id)
     if not student:
         raise HTTPException(status_code=404, detail="Student not found")
@@ -50,6 +53,7 @@ async def delete_student(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    """Delete a student by ID."""
     student = await crud_student.delete_student(db, student_id)
     if not student:
         raise HTTPException(status_code=404, detail="Student not found")

@@ -8,6 +8,7 @@ from app.deps.redis import redis_client
 
 
 async def create_invoice(db: AsyncSession, invoice: InvoiceCreate) -> Invoice:
+    """Creates a new invoice in the database."""
     db_invoice = Invoice(**invoice.model_dump())
     db.add(db_invoice)
     await db.commit()
@@ -19,6 +20,7 @@ async def create_invoice(db: AsyncSession, invoice: InvoiceCreate) -> Invoice:
 
 
 async def get_invoices(db: AsyncSession, skip: int = 0, limit: int = 10):
+    """Retrieves a list of invoices from the database, with caching."""
     cache_key = f"invoices:skip={skip}:limit={limit}"
     cached_invoices = await redis_client.get(cache_key)
     if cached_invoices:
@@ -32,6 +34,7 @@ async def get_invoices(db: AsyncSession, skip: int = 0, limit: int = 10):
 
 
 async def get_invoice(db: AsyncSession, invoice_id: UUID):
+    """Retrieves a single invoice by its ID, with caching."""
     cache_key = f"invoice:{invoice_id}"
     cached_invoice = await redis_client.get(cache_key)
     if cached_invoice:
@@ -45,6 +48,7 @@ async def get_invoice(db: AsyncSession, invoice_id: UUID):
 
 
 async def delete_invoice(db: AsyncSession, invoice_id: UUID):
+    """Deletes an invoice from the database by its ID."""
     invoice = await get_invoice(db, invoice_id)
     if invoice:
         await db.delete(invoice)

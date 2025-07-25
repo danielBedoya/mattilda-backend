@@ -18,6 +18,7 @@ async def create_invoice(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    """Create a new invoice."""
     return await crud_invoice.create_invoice(db, invoice)
 
 
@@ -28,6 +29,7 @@ async def read_invoices(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    """Retrieve a list of invoices."""
     return await crud_invoice.get_invoices(db, skip, limit)
 
 
@@ -37,6 +39,7 @@ async def read_invoice(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    """Retrieve a single invoice by ID."""
     invoice = await crud_invoice.get_invoice(db, invoice_id)
     if not invoice:
         raise HTTPException(status_code=404, detail="Invoice not found")
@@ -49,6 +52,7 @@ async def delete_invoice(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    """Delete an invoice by ID."""
     invoice = await crud_invoice.delete_invoice(db, invoice_id)
     if not invoice:
         raise HTTPException(status_code=404, detail="Invoice not found")
