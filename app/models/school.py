@@ -15,3 +15,4 @@ class School(Base):
     address = Column(String, nullable=True)
 
     students = relationship("Student", back_populates="school", cascade="all, delete")
+    invoices = relationship("Invoice", back_populates="school", cascade="all, delete")

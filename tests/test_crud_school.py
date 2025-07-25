@@ -1,3 +1,5 @@
+"""Tests for the CRUD operations of the School model."""
+
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 from uuid import UUID, uuid4
@@ -11,6 +13,7 @@ from app.schemas.school import SchoolCreate
 
 @pytest.fixture
 def mock_db_session():
+    """Fixture that provides a mocked AsyncSession for database interactions."""
     session = AsyncMock()
     session.execute.return_value = MagicMock()
     session.execute.return_value.scalars.return_value = MagicMock()
@@ -19,6 +22,7 @@ def mock_db_session():
 
 @pytest.mark.asyncio
 async def test_get_school(mock_db_session):
+    """Test retrieving a single school by its ID."""
     school_id = uuid4()
     mock_school = School(id=school_id, name="Test School")
     mock_db_session.execute.return_value.scalars.return_value.first.return_value = (
@@ -33,6 +37,7 @@ async def test_get_school(mock_db_session):
 
 @pytest.mark.asyncio
 async def test_get_schools(mock_db_session):
+    """Test retrieving a list of schools."""
     mock_schools = [
         School(id=uuid4(), name="School 1"),
         School(id=uuid4(), name="School 2"),
@@ -49,6 +54,7 @@ async def test_get_schools(mock_db_session):
 
 @pytest.mark.asyncio
 async def test_create_school(mock_db_session):
+    """Test creating a new school."""
     school_create = SchoolCreate(name="New School")
 
     created_school = await create_school(mock_db_session, school_create)
@@ -61,6 +67,7 @@ async def test_create_school(mock_db_session):
 
 @pytest.mark.asyncio
 async def test_delete_school(mock_db_session):
+    """Test deleting an existing school."""
     school_id = uuid4()
     mock_school = School(id=school_id, name="School to Delete")
     mock_db_session.execute.return_value.scalars.return_value.first.return_value = (
@@ -76,6 +83,7 @@ async def test_delete_school(mock_db_session):
 
 @pytest.mark.asyncio
 async def test_delete_school_not_found(mock_db_session):
+    """Test deleting a school that does not exist."""
     school_id = uuid4()
     mock_db_session.execute.return_value.scalars.return_value.first.return_value = None
 

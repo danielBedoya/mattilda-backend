@@ -11,7 +11,13 @@ class Student(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     name = Column(String, nullable=False)
     email = Column(String, unique=True, nullable=False)
+    document_number = Column(String, unique=True, nullable=False)
+    address = Column(String, nullable=False)
+    phone = Column(String, nullable=False)
+    document_type_id = Column(
+        UUID(as_uuid=True), ForeignKey("document_types.id"), nullable=False
+    )
     school_id = Column(UUID(as_uuid=True), ForeignKey("schools.id", ondelete="CASCADE"))
 
     school = relationship("School", back_populates="students")
-    invoices = relationship("Invoice", back_populates="student", cascade="all, delete")
+    document_type = relationship("DocumentType")

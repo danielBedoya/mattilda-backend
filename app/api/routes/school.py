@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.deps.db import get_db
+from app.deps.user import get_current_user
+from app.models.user import User
 from app.schemas.school import SchoolCreate, SchoolRead
 from app.crud import school as crud_school
 from typing import List
@@ -11,7 +13,11 @@ router = APIRouter(prefix="/schools", tags=["Schools"])
 
 
 @router.post("/", response_model=SchoolRead)
-async def create_school(school: SchoolCreate, db: AsyncSession = Depends(get_db)):
+async def create_school(
+    school: SchoolCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
     """
     Create a new school.
 
