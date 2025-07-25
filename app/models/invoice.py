@@ -14,9 +14,4 @@ class Invoice(Base):
     due_date = Column(Date, default=date.today)
     status = Column(String, default="pending")
     school_id = Column(UUID(as_uuid=True), ForeignKey("schools.id", ondelete="CASCADE"))
-    student_id = Column(
-        UUID(as_uuid=True), ForeignKey("students.id", ondelete="CASCADE")
-    )
-
     school = relationship("School", back_populates="invoices")
-    student = relationship("Student")

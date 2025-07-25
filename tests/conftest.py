@@ -12,7 +12,7 @@ from app.main import app
 from app.deps.db import get_db
 from app.deps.user import get_current_user
 from app.db.base import Base
-from tests.mocks import MockUser, MockDocumentType
+from tests.mocks import MockUser, MockDocumentType, MockSchool
 
 
 # Setup for API tests
@@ -53,6 +53,7 @@ def mock_db_session():
     mock_users_db = {}
     mock_students_db = {}
     mock_document_types_db = {}
+    mock_invoices_db = {}
 
     # Add a default document type for testing
     default_document_type = MockDocumentType()
@@ -120,6 +121,72 @@ def mock_db_session():
                     )
                 mock_result.scalars.return_value.all.return_value = students_list
                 return mock_result
+        # Check if the statement is for the Student model
+        elif "students" in str(statement.compile()):
+            mock_result = MagicMock()
+            if statement.whereclause is not None:
+                student_id = None
+                if hasattr(statement.whereclause, "right") and hasattr(
+                    statement.whereclause.right, "value"
+                ):
+                    student_id = statement.whereclause.right.value
+                elif (
+                    hasattr(statement.whereclause, "clauses")
+                    and len(statement.whereclause.clauses) > 0
+                    and hasattr(statement.whereclause.clauses[0], "right")
+                    and hasattr(statement.whereclause.clauses[0].right, "value")
+                ):
+                    student_id = statement.whereclause.clauses[0].right.value
+
+                mock_student = mock_students_db.get(student_id)
+                if mock_student:
+                    mock_student.document_type = (
+                        mock_document_types_db.get(mock_student.document_type_id)
+                        or default_document_type
+                    )
+                mock_result.scalar_one_or_none.return_value = mock_student
+                return mock_result
+            else:
+                students_list = list(mock_students_db.values())
+                for student in students_list:
+                    student.document_type = (
+                        mock_document_types_db.get(student.document_type_id)
+                        or default_document_type
+                    )
+                mock_result.scalars.return_value.all.return_value = students_list
+                return mock_result
+        # Check if the statement is for the Invoice model
+        elif "invoices" in str(statement.compile()):
+            mock_result = MagicMock()
+            if statement.whereclause is not None:
+                invoice_id = None
+                if hasattr(statement.whereclause, "right") and hasattr(
+                    statement.whereclause.right, "value"
+                ):
+                    invoice_id = statement.whereclause.right.value
+                elif (
+                    hasattr(statement.whereclause, "clauses")
+                    and len(statement.whereclause.clauses) > 0
+                    and hasattr(statement.whereclause.clauses[0], "right")
+                    and hasattr(statement.whereclause.clauses[0].right, "value")
+                ):
+                    invoice_id = statement.whereclause.clauses[0].right.value
+
+                mock_invoice = mock_invoices_db.get(invoice_id)
+                if mock_invoice:
+                    mock_invoice.school = (
+                        mock_schools_db.get(mock_invoice.school_id) or MockSchool()
+                    )
+                mock_result.scalar_one_or_none.return_value = mock_invoice
+                return mock_result
+            else:
+                invoices_list = list(mock_invoices_db.values())
+                for invoice in invoices_list:
+                    invoice.school = (
+                        mock_schools_db.get(invoice.school_id) or MockSchool()
+                    )
+                mock_result.scalars.return_value.all.return_value = invoices_list
+                return mock_result
         else:
             # Existing logic for schools
             if statement.whereclause is not None:
@@ -162,6 +229,13 @@ def mock_db_session():
                 or default_document_type
             )
             mock_students_db[obj.id] = obj
+        elif hasattr(obj, "amount") and hasattr(
+            obj, "school_id"
+        ):  # It's an Invoice object
+            obj.school = mock_schools_db.get(obj.school_id) or MockSchool()
+            mock_invoices_db[obj.id] = obj
+        elif hasattr(obj, "name"):  # It's a School object
+            mock_schools_db[obj.id] = obj
 
     session.add.side_effect = mock_add
 
@@ -177,6 +251,11 @@ def mock_db_session():
                 mock_document_types_db.get(obj.document_type_id)
                 or default_document_type
             )
+        elif hasattr(obj, "amount") and hasattr(
+            obj, "school_id"
+        ):  # It's an Invoice object
+            obj.id = obj.id or uuid4()
+            obj.school = mock_schools_db.get(obj.school_id) or MockSchool()
         elif hasattr(obj, "name"):  # It's a School object
             obj.id = uuid4()
             obj.name = obj.name
@@ -192,6 +271,12 @@ def mock_db_session():
             and obj.id in mock_students_db
         ):
             del mock_students_db[obj.id]
+        elif (
+            hasattr(obj, "amount")
+            and hasattr(obj, "school_id")
+            and obj.id in mock_invoices_db
+        ):
+            del mock_invoices_db[obj.id]
         elif hasattr(obj, "name") and obj.id in mock_schools_db:
             del mock_schools_db[obj.id]
 

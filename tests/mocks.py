@@ -1,4 +1,5 @@
 from uuid import uuid4
+from unittest.mock import MagicMock
 
 
 class MockUser:
@@ -17,3 +18,12 @@ class MockDocumentType:
     def __init__(self, id=None, name="Mock Document Type") -> None:
         self.id = id if id else uuid4()
         self.name = name
+
+
+class MockSchool:
+    """A mock school class for testing purposes."""
+
+    def __init__(self, id=None, name="Mock School") -> None:
+        self.id = id if id else uuid4()
+        self.name = name
+        self._sa_instance_state = MagicMock()  # Add this line
