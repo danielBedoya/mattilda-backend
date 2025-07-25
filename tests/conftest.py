@@ -7,12 +7,57 @@ from sqlalchemy.orm import sessionmaker
 from typing import AsyncGenerator
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
+import pytest_mock
+from redis.asyncio import Redis
 
 from app.main import app
 from app.deps.db import get_db
 from app.deps.user import get_current_user
 from app.db.base import Base
 from tests.mocks import MockUser, MockDocumentType, MockSchool
+from app.schemas.student import DocumentTypeOut
+
+@pytest.fixture(autouse=True)
+def mock_redis_client(mocker):
+    mocker.patch('app.deps.redis.redis_client.get', new_callable=AsyncMock, return_value=None)
+    mocker.patch('app.deps.redis.redis_client.setex', new_callable=AsyncMock, return_value=None)
+    mocker.patch('app.deps.redis.redis_client.delete', new_callable=AsyncMock, return_value=None)
+    mocker.patch('app.deps.redis.redis_client.keys', new_callable=AsyncMock, return_value=[])
+
+@pytest.fixture
+def mock_document_type():
+    return MockDocumentType()
+
+@pytest.fixture
+def mock_school():
+    return MockSchool()
+
+@pytest.fixture
+def mock_student(mock_document_type, mock_school):
+    student = MagicMock()
+    student.id = uuid4()
+    student.name = "Test Student"
+    student.email = "test@example.com"
+    student.document_number = "12345"
+    student.address = "123 Test St"
+    student.phone = "555-1234"
+    student.document_type_id = mock_document_type.id
+    student.school_id = mock_school.id
+    student.document_type = DocumentTypeOut(id=mock_document_type.id, name=mock_document_type.name)
+    student.school = mock_school
+    return student
+
+@pytest.fixture
+def mock_invoice(mock_school):
+    invoice = MagicMock()
+    invoice.id = uuid4()
+    invoice.amount = 100.0
+    invoice.due_date = date.today()
+    invoice.status = "pending"
+    invoice.school_id = mock_school.id
+    invoice.school = mock_school
+    return invoice
+
 
 
 # Setup for API tests
@@ -57,7 +102,7 @@ def mock_db_session():
 
     # Add a default document type for testing
     default_document_type = MockDocumentType()
-    mock_document_types_db[default_document_type.id] = default_document_type
+    mock_document_types_db[default_document_type.id] = DocumentTypeOut(id=default_document_type.id, name=default_document_type.name)
 
     # Pre-hash a password for the test user
     from app.core.security import get_password_hash
@@ -106,53 +151,13 @@ def mock_db_session():
 
                 mock_student = mock_students_db.get(student_id)
                 if mock_student:
-                    mock_student.document_type = (
-                        mock_document_types_db.get(mock_student.document_type_id)
-                        or default_document_type
-                    )
+                    mock_student.document_type = mock_document_types_db.get(mock_student.document_type_id)
                 mock_result.scalar_one_or_none.return_value = mock_student
                 return mock_result
             else:
                 students_list = list(mock_students_db.values())
                 for student in students_list:
-                    student.document_type = (
-                        mock_document_types_db.get(student.document_type_id)
-                        or default_document_type
-                    )
-                mock_result.scalars.return_value.all.return_value = students_list
-                return mock_result
-        # Check if the statement is for the Student model
-        elif "students" in str(statement.compile()):
-            mock_result = MagicMock()
-            if statement.whereclause is not None:
-                student_id = None
-                if hasattr(statement.whereclause, "right") and hasattr(
-                    statement.whereclause.right, "value"
-                ):
-                    student_id = statement.whereclause.right.value
-                elif (
-                    hasattr(statement.whereclause, "clauses")
-                    and len(statement.whereclause.clauses) > 0
-                    and hasattr(statement.whereclause.clauses[0], "right")
-                    and hasattr(statement.whereclause.clauses[0].right, "value")
-                ):
-                    student_id = statement.whereclause.clauses[0].right.value
-
-                mock_student = mock_students_db.get(student_id)
-                if mock_student:
-                    mock_student.document_type = (
-                        mock_document_types_db.get(mock_student.document_type_id)
-                        or default_document_type
-                    )
-                mock_result.scalar_one_or_none.return_value = mock_student
-                return mock_result
-            else:
-                students_list = list(mock_students_db.values())
-                for student in students_list:
-                    student.document_type = (
-                        mock_document_types_db.get(student.document_type_id)
-                        or default_document_type
-                    )
+                    student.document_type = mock_document_types_db.get(student.document_type_id)
                 mock_result.scalars.return_value.all.return_value = students_list
                 return mock_result
         # Check if the statement is for the Invoice model
@@ -247,10 +252,7 @@ def mock_db_session():
             obj, "document_number"
         ):  # It's a Student object
             obj.id = obj.id or uuid4()
-            obj.document_type = (
-                mock_document_types_db.get(obj.document_type_id)
-                or default_document_type
-            )
+            obj.document_type = mock_document_types_db.get(obj.document_type_id)
         elif hasattr(obj, "amount") and hasattr(
             obj, "school_id"
         ):  # It's an Invoice object

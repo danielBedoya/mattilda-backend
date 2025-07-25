@@ -15,7 +15,14 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-  
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - mattilda_network
+
   backend:
     build: .
     command: bash -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
@@ -27,11 +34,15 @@ services:
       - .env
     environment:
       - PYTHONPATH=/code
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     networks:
       - mattilda_network
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_started
 
 volumes:
   postgres_data:
