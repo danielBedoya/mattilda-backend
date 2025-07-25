@@ -72,8 +72,7 @@ async def create_school(db: AsyncSession, school: SchoolCreate):
     # Invalidate cache for all schools and specific school
     await redis_client.delete(f"school:{db_school.id}")
     # Invalidate all 'get_schools' caches (more robust invalidation might be needed for large datasets)
-    for key in await redis_client.keys("schools:*"):
-        await redis_client.delete(key)
+    await redis_client.delete(*await redis_client.keys("schools:*"))
     return db_school
 
 
@@ -95,6 +94,5 @@ async def delete_school(db: AsyncSession, school_id: uuid.UUID):
         await db.commit()
         # Invalidate cache for the deleted school and all schools
         await redis_client.delete(f"school:{school_id}")
-        for key in await redis_client.keys("schools:*"):
-            await redis_client.delete(key)
+        await redis_client.delete(*await redis_client.keys("schools:*"))
     return db_school

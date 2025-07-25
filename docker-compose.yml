@@ -34,8 +34,6 @@ services:
       - .env
     environment:
       - PYTHONPATH=/code
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
     networks:
       - mattilda_network
     depends_on:

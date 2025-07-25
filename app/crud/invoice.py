@@ -14,8 +14,7 @@ async def create_invoice(db: AsyncSession, invoice: InvoiceCreate) -> Invoice:
     await db.refresh(db_invoice)
     # Invalidate cache for all invoices and specific invoice
     await redis_client.delete(f"invoice:{db_invoice.id}")
-    for key in await redis_client.keys("invoices:*"):
-        await redis_client.delete(key)
+    await redis_client.delete(*await redis_client.keys("invoices:*"))
     return db_invoice
 
 
@@ -52,6 +51,5 @@ async def delete_invoice(db: AsyncSession, invoice_id: UUID):
         await db.commit()
         # Invalidate cache for the deleted invoice and all invoices
         await redis_client.delete(f"invoice:{invoice_id}")
-        for key in await redis_client.keys("invoices:*"):
-            await redis_client.delete(key)
+        await redis_client.delete(*await redis_client.keys("invoices:*"))
     return invoice

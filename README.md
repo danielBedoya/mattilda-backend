@@ -117,7 +117,8 @@ The application relies on several environment variables for configuration. These
 Here are some common variables you might need to configure:
 
 - `DATABASE_URL`: PostgreSQL connection string (e.g., `postgresql://user:password@host:port/dbname`)
-- `REDIS_URL`: Redis connection string (e.g., `redis://localhost:6379/0`)
+- `REDIS_HOST`: Redis host (e.g., `localhost`)
+- `REDIS_PORT`: Redis port (e.g., `6379`)
 - `SECRET_KEY`: A strong secret key for security purposes (e.g., for JWTs)
 - `ACCESS_TOKEN_EXPIRE_MINUTES`: Expiration time for access tokens
 - `DEBUG`: Set to `False` in production

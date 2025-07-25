@@ -28,8 +28,7 @@ async def create_student(db: AsyncSession, student: StudentCreate) -> Student:
     # Invalidate cache for all students and specific student
     if loaded_student:
         await redis_client.delete(f"student:{loaded_student.id}")
-        for key in await redis_client.keys("students:*"):
-            await redis_client.delete(key)
+        await redis_client.delete(*await redis_client.keys("students:*"))
             
     return loaded_student
 
@@ -85,6 +84,5 @@ async def delete_student(db: AsyncSession, student_id: UUID):
         await db.commit()
         # Invalidate cache for the deleted student and all students
         await redis_client.delete(f"student:{student_id}")
-        for key in await redis_client.keys("students:*"):
-            await redis_client.delete(key)
+        await redis_client.delete(*await redis_client.keys("students:*"))
     return student
