@@ -12,16 +12,7 @@ from app.main import app
 from app.deps.db import get_db
 from app.deps.user import get_current_user
 from app.db.base import Base
-
-
-class MockUser:
-    """A mock user class for testing purposes."""
-
-    def __init__(self, username, email, hashed_password, id=None):
-        self.username = username
-        self.email = email
-        self.hashed_password = hashed_password
-        self.id = id if id else uuid4()
+from tests.mocks import MockUser, MockDocumentType
 
 
 # Setup for API tests
@@ -57,9 +48,15 @@ def mock_db_session():
     session.execute.return_value = MagicMock()
     session.execute.return_value.scalars.return_value = MagicMock()
 
-    # Simulate a database of schools and users
+    # Simulate a database of schools, users, students, and document types
     mock_schools_db = {}
     mock_users_db = {}
+    mock_students_db = {}
+    mock_document_types_db = {}
+
+    # Add a default document type for testing
+    default_document_type = MockDocumentType()
+    mock_document_types_db[default_document_type.id] = default_document_type
 
     # Pre-hash a password for the test user
     from app.core.security import get_password_hash
@@ -89,6 +86,40 @@ def mock_db_session():
             mock_result.scalar.side_effect = scalar_side_effect
             mock_result.scalar_one_or_none.side_effect = scalar_side_effect
             return mock_result
+        # Check if the statement is for the Student model
+        elif "students" in str(statement.compile()):
+            mock_result = MagicMock()
+            if statement.whereclause is not None:
+                student_id = None
+                if hasattr(statement.whereclause, "right") and hasattr(
+                    statement.whereclause.right, "value"
+                ):
+                    student_id = statement.whereclause.right.value
+                elif (
+                    hasattr(statement.whereclause, "clauses")
+                    and len(statement.whereclause.clauses) > 0
+                    and hasattr(statement.whereclause.clauses[0], "right")
+                    and hasattr(statement.whereclause.clauses[0].right, "value")
+                ):
+                    student_id = statement.whereclause.clauses[0].right.value
+
+                mock_student = mock_students_db.get(student_id)
+                if mock_student:
+                    mock_student.document_type = (
+                        mock_document_types_db.get(mock_student.document_type_id)
+                        or default_document_type
+                    )
+                mock_result.scalar_one_or_none.return_value = mock_student
+                return mock_result
+            else:
+                students_list = list(mock_students_db.values())
+                for student in students_list:
+                    student.document_type = (
+                        mock_document_types_db.get(student.document_type_id)
+                        or default_document_type
+                    )
+                mock_result.scalars.return_value.all.return_value = students_list
+                return mock_result
         else:
             # Existing logic for schools
             if statement.whereclause is not None:
@@ -123,8 +154,14 @@ def mock_db_session():
             mock_users_db[obj.username] = MockUser(
                 obj.username, obj.email, test_hashed_password
             )
-        elif hasattr(obj, "name"):  # It's a School object
-            mock_schools_db[obj.id] = obj
+        elif hasattr(obj, "email") and hasattr(
+            obj, "document_number"
+        ):  # It's a Student object
+            obj.document_type = (
+                mock_document_types_db.get(obj.document_type_id)
+                or default_document_type
+            )
+            mock_students_db[obj.id] = obj
 
     session.add.side_effect = mock_add
 
@@ -132,6 +169,14 @@ def mock_db_session():
     async def mock_refresh(obj):
         if hasattr(obj, "username"):  # It's a User object
             obj.id = uuid4()  # Assign a UUID for user as well
+        elif hasattr(obj, "email") and hasattr(
+            obj, "document_number"
+        ):  # It's a Student object
+            obj.id = obj.id or uuid4()
+            obj.document_type = (
+                mock_document_types_db.get(obj.document_type_id)
+                or default_document_type
+            )
         elif hasattr(obj, "name"):  # It's a School object
             obj.id = uuid4()
             obj.name = obj.name
@@ -139,9 +184,15 @@ def mock_db_session():
 
     session.refresh.side_effect = mock_refresh
 
-    # Mock for delete_school
+    # Mock for delete
     async def mock_delete(obj):
-        if hasattr(obj, "name") and obj.id in mock_schools_db:
+        if (
+            hasattr(obj, "email")
+            and hasattr(obj, "document_number")
+            and obj.id in mock_students_db
+        ):
+            del mock_students_db[obj.id]
+        elif hasattr(obj, "name") and obj.id in mock_schools_db:
             del mock_schools_db[obj.id]
 
     session.delete.side_effect = mock_delete
@@ -161,9 +212,9 @@ async def override_get_db(mock_db_session):
     app.dependency_overrides.clear()
 
 
-@pytest.fixture(autouse=True)
-async def override_get_current_user():
-    """Overrides the get_current_user dependency to return a mock user."""
+@pytest.fixture(scope="function")
+async def override_get_current_user_dependency():
+    """Overrides the get_current_user dependency to return a mock user for authenticated tests."""
 
     async def _override_get_current_user():
         return MockUser(
@@ -174,4 +225,15 @@ async def override_get_current_user():
 
     app.dependency_overrides[get_current_user] = _override_get_current_user
     yield
-    app.dependency_overrides.clear()
+    app.dependency_overrides.pop(get_current_user, None)
+
+
+@pytest.fixture(scope="function")
+def authenticated_client(client: TestClient, override_get_current_user_dependency):
+    """Provides an authenticated TestClient for making requests to protected endpoints."""
+    # The override_get_current_user_dependency fixture handles the user mocking.
+    # We just need to set a dummy token for the client.
+    token = "mock_access_token"
+    client.headers["Authorization"] = f"Bearer {token}"
+    yield client
+    client.headers.pop("Authorization", None)  # Clean up headers after test

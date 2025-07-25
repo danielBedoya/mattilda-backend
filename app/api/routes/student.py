@@ -6,25 +6,38 @@ from uuid import UUID
 from app.schemas.student import StudentCreate, StudentOut
 from app.crud import student as crud_student
 from app.deps.db import get_db
+from app.deps.user import get_current_user
+from app.models.user import User
 
 
 router = APIRouter(prefix="/students", tags=["students"])
 
 
 @router.post("/", response_model=StudentOut)
-async def create_student(student: StudentCreate, db: AsyncSession = Depends(get_db)):
+async def create_student(
+    student: StudentCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     return await crud_student.create_student(db, student)
 
 
 @router.get("/", response_model=List[StudentOut])
 async def read_students(
-    skip: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db)
+    skip: int = 0,
+    limit: int = 10,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     return await crud_student.get_students(db, skip, limit)
 
 
 @router.get("/{student_id}", response_model=StudentOut)
-async def read_student(student_id: UUID, db: AsyncSession = Depends(get_db)):
+async def read_student(
+    student_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     student = await crud_student.get_student(db, student_id)
     if not student:
         raise HTTPException(status_code=404, detail="Student not found")
@@ -32,7 +45,11 @@ async def read_student(student_id: UUID, db: AsyncSession = Depends(get_db)):
 
 
 @router.delete("/{student_id}", response_model=StudentOut)
-async def delete_student(student_id: UUID, db: AsyncSession = Depends(get_db)):
+async def delete_student(
+    student_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     student = await crud_student.delete_student(db, student_id)
     if not student:
         raise HTTPException(status_code=404, detail="Student not found")
