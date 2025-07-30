@@ -6,9 +6,9 @@ from fastapi import status
 from uuid import uuid4
 
 from app.main import app
-from app.schemas.student import StudentOut
-from app.models.student import Student
-from app.models.document_type import DocumentType
+from app.student.schema import StudentOut
+from app.student.model import Student
+from app.document_type.model import DocumentType
 
 
 def test_read_students(authenticated_client: TestClient, mock_db_session):

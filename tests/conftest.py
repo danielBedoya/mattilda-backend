@@ -15,7 +15,7 @@ from app.deps.db import get_db
 from app.deps.user import get_current_user
 from app.db.base import Base
 from tests.mocks import MockUser, MockDocumentType, MockSchool
-from app.schemas.student import DocumentTypeOut
+from app.student.schema import DocumentTypeOut
 
 @pytest.fixture(autouse=True)
 def mock_redis_client(mocker):

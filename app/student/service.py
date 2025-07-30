@@ -2,8 +2,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 from uuid import UUID
-from app.models.student import Student
-from app.schemas.student import StudentCreate, StudentOut
+from .model import Student
+from .schema import StudentCreate, StudentOut
 import json
 from app.deps.redis import redis_client
 

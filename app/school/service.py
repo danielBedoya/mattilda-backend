@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from app.models.school import School
-from app.schemas.school import SchoolCreate, SchoolRead
+from .model import School
+from .schema import SchoolCreate, SchoolRead
 import uuid
 import json
 from app.deps.redis import redis_client

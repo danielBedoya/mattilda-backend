@@ -7,7 +7,7 @@ from uuid import uuid4, UUID
 from datetime import date
 
 from app.main import app
-from app.schemas.invoice import InvoiceOut
+from app.invoice.schema import InvoiceOut
 
 
 def test_create_invoice(authenticated_client: TestClient, mock_db_session):

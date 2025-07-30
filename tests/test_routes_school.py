@@ -6,7 +6,7 @@ from fastapi import status
 from uuid import uuid4
 
 from app.main import app
-from app.schemas.school import SchoolRead
+from app.school.schema import SchoolRead
 
 
 def test_create_school(authenticated_client: TestClient, mock_db_session):

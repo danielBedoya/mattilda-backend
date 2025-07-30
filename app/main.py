@@ -1,7 +1,10 @@
 from fastapi import FastAPI
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
-from app.api.routes import school, auth, student, invoice
+from app.school import controller as school_controller
+from app.user import controller as user_controller
+from app.student import controller as student_controller
+from app.invoice import controller as invoice_controller
 from app.db.database import engine
 from app.db.base import Base
 from app.core.exceptions import register_exception_handlers
@@ -21,10 +24,10 @@ async def startup_event():
 register_exception_handlers(app)
 
 
-app.include_router(school.router)
-app.include_router(auth.router)
-app.include_router(student.router)
-app.include_router(invoice.router)
+app.include_router(school_controller.router)
+app.include_router(user_controller.router)
+app.include_router(student_controller.router)
+app.include_router(invoice_controller.router)
 
 
 @app.get("/")

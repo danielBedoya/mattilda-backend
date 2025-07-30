@@ -3,9 +3,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.deps.db import get_db
 from app.deps.user import get_current_user
-from app.models.user import User
-from app.schemas.school import SchoolCreate, SchoolRead
-from app.crud import school as crud_school
+from app.user.model import User
+from .schema import SchoolCreate, SchoolRead
+from . import service as school_service
 from typing import List
 from uuid import UUID
 
@@ -28,7 +28,7 @@ async def create_school(
     Returns:
         SchoolRead: The created school.
     """
-    return await crud_school.create_school(db, school)
+    return await school_service.create_school(db, school)
 
 
 @router.get("/", response_model=List[SchoolRead])
@@ -46,7 +46,7 @@ async def read_schools(
     Returns:
         List[SchoolRead]: A list of schools.
     """
-    return await crud_school.get_schools(db, skip=skip, limit=limit)
+    return await school_service.get_schools(db, skip=skip, limit=limit)
 
 
 @router.get("/{school_id}", response_model=SchoolRead)
@@ -64,7 +64,7 @@ async def read_school(school_id: UUID, db: AsyncSession = Depends(get_db)):
     Raises:
         HTTPException: If the school is not found.
     """
-    db_school = await crud_school.get_school(db, school_id)
+    db_school = await school_service.get_school(db, school_id)
     if not db_school:
         raise HTTPException(status_code=404, detail="School not found")
     return db_school
@@ -85,7 +85,7 @@ async def delete_school(school_id: UUID, db: AsyncSession = Depends(get_db)):
     Raises:
         HTTPException: If the school is not found.
     """
-    db_school = await crud_school.delete_school(db, school_id)
+    db_school = await school_service.delete_school(db, school_id)
     if not db_school:
         raise HTTPException(status_code=404, detail="School not found")
     return db_school

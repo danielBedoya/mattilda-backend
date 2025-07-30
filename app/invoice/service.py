@@ -1,8 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from uuid import UUID
-from app.models.invoice import Invoice
-from app.schemas.invoice import InvoiceCreate, InvoiceOut
+from .model import Invoice
+from .schema import InvoiceCreate, InvoiceOut
 import json
 from app.deps.redis import redis_client
 

@@ -6,7 +6,6 @@ This repository contains the backend services for the Mattilda application.
 
 - [Local Development Setup](#local-development-setup)
   - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
   - [Running the Application](#running-the-application)
 - [Deployment](#deployment)
   - [Prerequisites](#deployment-prerequisites)
@@ -22,10 +21,8 @@ This repository contains the backend services for the Mattilda application.
 Before you begin, ensure you have the following installed:
 
 - Docker and Docker Compose
-- Python 3.9+
-- pip (Python package installer)
 
-### Installation
+### Running the Application
 
 1.  **Clone the repository:**
 
@@ -34,44 +31,17 @@ Before you begin, ensure you have the following installed:
     cd mattilda-backend
     ```
 
-2.  **Create a virtual environment (recommended):**
-
-    ```bash
-    python3 -m venv venv
-    source venv/bin/activate
-    ```
-
-3.  **Install Python dependencies:**
-
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-4.  **Set up environment variables:**
+2.  **Set up environment variables:**
 
     Create a `.env` file in the root directory based on `.env.example` (if available) or the [Environment Variables](#environment-variables) section.
 
-5.  **Run Docker Compose for services like PostgreSQL and Redis:**
+3.  **Run the application with Docker Compose:**
 
     ```bash
-    docker-compose up -d postgres redis
+    docker-compose up
     ```
 
-6.  **Run database migrations:**
-
-    ```bash
-    alembic upgrade head
-    ```
-
-### Running the Application
-
-To run the FastAPI application locally:
-
-```bash
-python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-The API will be available at `http://localhost:8000`.
+    This command will build the necessary Docker images and start all the services, including the FastAPI application, PostgreSQL, and Redis. The API will be available at `http://localhost:8000`.
 
 ## Deployment
 

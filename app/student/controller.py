@@ -3,11 +3,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 from uuid import UUID
 
-from app.schemas.student import StudentCreate, StudentOut
-from app.crud import student as crud_student
+from .schema import StudentCreate, StudentOut
+from . import service as student_service
 from app.deps.db import get_db
 from app.deps.user import get_current_user
-from app.models.user import User
+from app.user.model import User
 
 
 router = APIRouter(prefix="/students", tags=["students"])
@@ -20,7 +20,7 @@ async def create_student(
     current_user: User = Depends(get_current_user),
 ):
     """Create a new student."""
-    return await crud_student.create_student(db, student)
+    return await student_service.create_student(db, student)
 
 
 @router.get("/", response_model=List[StudentOut])
@@ -31,7 +31,7 @@ async def read_students(
     current_user: User = Depends(get_current_user),
 ):
     """Retrieve a list of students."""
-    return await crud_student.get_students(db, skip, limit)
+    return await student_service.get_students(db, skip, limit)
 
 
 @router.get("/{student_id}", response_model=StudentOut)
@@ -41,7 +41,7 @@ async def read_student(
     current_user: User = Depends(get_current_user),
 ):
     """Retrieve a single student by ID."""
-    student = await crud_student.get_student(db, student_id)
+    student = await student_service.get_student(db, student_id)
     if not student:
         raise HTTPException(status_code=404, detail="Student not found")
     return student
@@ -54,7 +54,7 @@ async def delete_student(
     current_user: User = Depends(get_current_user),
 ):
     """Delete a student by ID."""
-    student = await crud_student.delete_student(db, student_id)
+    student = await student_service.delete_student(db, student_id)
     if not student:
         raise HTTPException(status_code=404, detail="Student not found")
     return student

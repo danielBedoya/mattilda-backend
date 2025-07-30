@@ -5,9 +5,9 @@ from unittest.mock import AsyncMock, MagicMock
 from uuid import UUID, uuid4
 from datetime import date
 
-from app.crud.invoice import get_invoice, get_invoices, create_invoice, delete_invoice
-from app.models.invoice import Invoice
-from app.schemas.invoice import InvoiceCreate
+from app.invoice.service import get_invoice, get_invoices, create_invoice, delete_invoice
+from app.invoice.model import Invoice
+from app.invoice.schema import InvoiceCreate
 
 
 @pytest.fixture

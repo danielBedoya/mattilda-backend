@@ -20,4 +20,4 @@ class Student(Base):
     school_id = Column(UUID(as_uuid=True), ForeignKey("schools.id", ondelete="CASCADE"))
 
     school = relationship("School", back_populates="students")
-    document_type = relationship("DocumentType")
+    document_type = relationship("DocumentType", back_populates="students")

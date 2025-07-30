@@ -4,11 +4,11 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock
 from uuid import UUID, uuid4
 
-from app.crud.school import get_school, get_schools, create_school, delete_school
-from app.models.school import School
-from app.models.student import Student
-from app.models.invoice import Invoice
-from app.schemas.school import SchoolCreate
+from app.school.service import get_school, get_schools, create_school, delete_school
+from app.school.model import School
+from app.student.model import Student
+from app.invoice.model import Invoice
+from app.school.schema import SchoolCreate
 
 
 @pytest.fixture
